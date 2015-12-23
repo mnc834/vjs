@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>The three different line caps:</p>
+<canvas id="myCanvas" width="300" height="150" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.</canvas>
+
+<div id="myDIV">This example uses the addEventListener() <span></span>. </div>
+
+<script>
+
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    c.addEventListener("wheel", scale_fun, false);
+    c.addEventListener("mousedown", down_fun, false);
+    c.addEventListener("mousemove", move_fun, false);
+    c.addEventListener("mouseup", up_fun, false);
+    c.addEventListener("click", click_fun, false);
+    var cur_scale = 1;
+    var width = c.width;
+    var height = c.height;
+    var x0 = width / 2;
+    var y0 = height / 2;
+    var p = {start: false, activated: false};
+    var t = {};
+
+    function draw()
+    {
+
+        var ratio = 1 * cur_scale;
+
+        ctx.clearRect(0, 0, width, height); // clear canvas
+
+
+        dx = width / 4 * ratio;
+        x1 = x0 - dx;
+        x2 = x0 + dx;
+        dy = height / 4 * ratio;
+        y1 = y0 - dy;
+        y2 = y0;
+        y3 = y0 + dy;
+
+        ctx.beginPath();
+        ctx.lineWidth = 10;
+        ctx.lineCap = "butt";
+        ctx.strokeStyle = "#FF0000";
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y1);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#00FF00";
+        ctx.moveTo(x1, y2);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineCap = "square";
+        ctx.strokeStyle = "#0000FF";
+        ctx.moveTo(x1, y3);
+        ctx.lineTo(x2, y3);
+        ctx.stroke();
+
+        //axis
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.lineCap = "square";
+        ctx.strokeStyle = "#000000";
+        ctx.moveTo(0, y0);
+        ctx.lineTo(width, y0);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.lineCap = "square";
+        ctx.strokeStyle = "#000000";
+        ctx.moveTo(x0, 0);
+        ctx.lineTo(x0, height);
+        ctx.stroke();
+
+    }
+
+    draw();
+
+    function scale_fun(e)
+    {
+        var delta = e.wheelDelta || e.;
+        cur_scale = cur_scale * (1 + delta / 1000);
+        draw();
+    }
+
+    function down_fun(e)
+    {
+        p.x = e.clientX;
+        p.y = e.clientY;
+        p.start = true;
+        p.activated = false;
+    }
+
+    function move_fun(e)
+    {
+        if (true == p.start)
+        {
+            dx = e.clientX - p.x;
+            dy = e.clientY - p.y;
+            p.x = e.clientX;
+            p.y = e.clientY;
+            p.activated = true;
+            x0 = x0 + dx;
+            y0 = y0 + dy;
+            draw()
+        }
+    }
+
+    function up_fun()
+    {
+        p.start = false;
+    }
+
+    function get_mouse_pos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top
+        };
+    }
+
+    function click_fun(e)
+    {
+//        alert(c.left + ", " + c.style.bottom);
+        if (false == p.activated) {
+            pos = get_mouse_pos(c, e);
+            t.x = (pos.x - x0) / cur_scale;
+            t.y = (pos.y - y0) / cur_scale;
+            alert(t.x + ", " + t.y)
+        }
+    }
+
+</script>
+
+</body>
+</html>
