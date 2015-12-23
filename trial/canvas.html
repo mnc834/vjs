@@ -12,7 +12,9 @@
 
     var c = document.getElementById("myCanvas");
     var ctx = c.getContext("2d");
-    c.addEventListener("wheel", scale_fun, false);
+    //FF doesn't recognize mousewheel as of FF3.x
+    var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel";
+    c.addEventListener(mousewheelevt, scale_fun, false);
     c.addEventListener("mousedown", down_fun, false);
     c.addEventListener("mousemove", move_fun, false);
     c.addEventListener("mouseup", up_fun, false);
@@ -86,7 +88,8 @@
 
     function scale_fun(e)
     {
-        var delta = e.wheelDelta || e.;
+        //check for detail so Opera uses that instead of wheelDelta
+        var delta = e.wheelDelta ? e.wheelDelta : - e.detail * 120;
         cur_scale = cur_scale * (1 + delta / 1000);
         draw();
     }
