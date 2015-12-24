@@ -18,6 +18,7 @@
     c.addEventListener("mousedown", down_fun, false);
     c.addEventListener("mousemove", move_fun, false);
     c.addEventListener("mouseup", up_fun, false);
+    c.addEventListener("mouseleave", leave_fun, false);
     c.addEventListener("click", click_fun, false);
     var cur_scale = 1;
     var width = c.width;
@@ -118,6 +119,11 @@
     }
 
     function up_fun()
+    {
+        p.start = false;
+    }
+
+    function leave_fun()
     {
         p.start = false;
     }
