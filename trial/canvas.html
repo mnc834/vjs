@@ -27,6 +27,7 @@
     var y0 = height / 2;
     var p = {start: false, activated: false};
     var t = {};
+    var txt = document.getElementById("myDIV");
 
     function draw()
     {
@@ -138,12 +139,13 @@
 
     function click_fun(e)
     {
-//        alert(c.left + ", " + c.style.bottom);
         if (false == p.activated) {
             pos = get_mouse_pos(c, e);
-            t.x = (pos.x - x0) / cur_scale;
-            t.y = (pos.y - y0) / cur_scale;
-            alert(t.x + ", " + t.y)
+            t.x_pixels = pos.x - x0;
+            t.y_pixels = pos.y - y0;
+            t.x = t.x_pixels / cur_scale;
+            t.y = t.y_pixels / cur_scale;
+            txt.textContent = "(" + t.x + "; " + t.y + "); " + "(" + t.x_pixels + "; " + t.y_pixels + ")";
         }
     }
 
