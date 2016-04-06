@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html>
+
+<head>
+    <title>canvas test</title>
+    <script type="text/javascript" src="../src/v_plane.js"></script>
+    <script type="text/javascript" src="../src/g_objects.js"></script>
+</head>
+
 <body>
 
 <p>The three different line caps:</p>
@@ -14,249 +21,8 @@
 
 <script>
 
-    function V_plane(canvas) {
-        // storing the reference to an instance
-        var instance = this;
-
-        this.canvas = canvas;
-
-        //getting canvas's parameters
-        this.ctx = canvas.getContext("2d");
-
-        //current scale
-        this.cur_scale = 1;
-
-        //screen coordinates of the point with physical coordinates (0, 0)
-        //screen coordinates origin from top left corner of the canvas
-        this.x0 = canvas.width / 2;
-        this.y0 = canvas.height / 2;
-
-        //drag object
-        //pressed - in a mouse button is pressed down
-        //activated - if drag is started
-        //{x,y} screen coordinates of the point where the mouse button is pressed
-        this.p = {pressed: false, activated: false, x : undefined, y : undefined};
-
-        //list of on click listeners functions
-        this.on_click_listener_list = [];
-
-        //list of graphical objects (callback functions)
-        this.g_object_list = [];
-
-        //id counter of the graphical objects
-        this.g_object_counter = 0;
-
-        //setting canvas's event listeners
-        //FF doesn't recognize mousewheel as of FF3.x
-        var mousewheelevt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel";
-        canvas.addEventListener(mousewheelevt, function (e) {
-            instance.scale_fun(e)
-        }, false);
-        canvas.addEventListener("mousedown", function (e) {
-            instance.down_fun(e)
-        }, false);
-        canvas.addEventListener("mousemove", function (e) {
-            instance.move_fun(e)
-        }, false);
-        canvas.addEventListener("mouseup", function () {
-            instance.up_fun()
-        }, false);
-        canvas.addEventListener("mouseleave", function () {
-            instance.leave_fun()
-        }, false);
-        canvas.addEventListener("click", function (e) {
-            instance.click_fun(e)
-        }, false);
-
-        this.add_on_click_listener = function (on_click_listener)
-        {
-            this.on_click_listener_list.push(on_click_listener);
-        };
-
-        this.add_g_object = function(g_object)
-        {
-            var id = this.g_object_counter++;
-            this.g_object_list.push({id: id, g_object: g_object});
-            this.draw();
-            return id;
-        };
-
-        this.remove_g_object = function(id)
-        {
-            var filter_fun = function(g_obj_rec)
-            {
-                return id != g_obj_rec.id;
-            };
-            this.g_object_list = this.g_object_list.filter(filter_fun);
-            this.draw();
-        };
-
-        this.get_context_2d = function()
-        {
-            return this.ctx;
-        };
-
-        this.get_screen_size = function()
-        {
-            return {
-                width: canvas.width,
-                height: canvas.height
-            };
-        };
-
-        this.get_physical_window = function()
-        {
-            var size = this.get_screen_size();
-            var p0 = this.screen_to_physical({x: 0, y: 0});
-            var p1 = this.screen_to_physical({x: size.width, y:size.height});
-
-            return {
-                top: p0.y,
-                left: p0.x,
-                bottom: p1.y,
-                right: p1.x
-            };
-        };
-
-        this.get_cur_scale = function()
-        {
-            return this.cur_scale;
-        };
-
-        this.physical_to_screen = function(p)
-        {
-            var screen_x = this.x0 + p.x * this.cur_scale;
-            var screen_y = this.y0 - p.y * this.cur_scale;
-
-            return {
-                x: screen_x,
-                y:screen_y
-            };
-        };
-
-        this.screen_to_physical = function(p)
-        {
-            var physical_x = (p.x - this.x0) / this.cur_scale;
-            var physical_y = (this.y0 - p.y) / this.cur_scale;
-            return {
-                x: physical_x,
-                y: physical_y
-            };
-        };
-
-        this.draw = function () {
-
-            var size = this.get_screen_size();
-            var width = size.width;
-            var height = size.height;
-
-            this.ctx.clearRect(0, 0, width, height); // clear canvas
-
-            //invoking graphical objects draw functions
-            var i;
-            for (i = 0; i < this.g_object_list.length; i++)
-            {
-                this.g_object_list[i].g_object.draw(this);
-            }
-
-            //axis
-            this.ctx.beginPath();
-            this.ctx.lineWidth = 1;
-            this.ctx.lineCap = "square";
-            this.ctx.strokeStyle = "#000000";
-            this.ctx.moveTo(0, this.y0);
-            this.ctx.lineTo(width, this.y0);
-            this.ctx.stroke();
-
-            this.ctx.beginPath();
-            this.ctx.lineWidth = 1;
-            this.ctx.lineCap = "square";
-            this.ctx.strokeStyle = "#000000";
-            this.ctx.moveTo(this.x0, 0);
-            this.ctx.lineTo(this.x0, height);
-            this.ctx.stroke();
-
-        };
-
-        this.scale_fun = function (e) {
-            //getting physical and screen coordinates of the point
-            var p_screen = this.get_mouse_pos(e);
-            var p_physical = this.screen_to_physical(p_screen);
-
-            //check for detail so Opera uses that instead of wheelDelta
-            var delta = e.wheelDelta ? e.wheelDelta : -e.detail * 120;
-            var new_scale = this.cur_scale * (1 + delta / 1000);
-            this.cur_scale = new_scale;
-            this.x0 = p_screen.x - p_physical.x * new_scale;
-            this.y0 = p_screen.y + p_physical.y * new_scale;
-            this.draw();
-        };
-
-        this.down_fun = function (e) {
-            this.p.x = e.clientX;
-            this.p.y = e.clientY;
-            this.p.pressed = true;
-            this.p.activated = false;
-        };
-
-        this.move_fun = function (e) {
-            if (true == this.p.pressed) {
-                var dx = e.clientX - this.p.x;
-                var dy = e.clientY - this.p.y;
-                this.p.x = e.clientX;
-                this.p.y = e.clientY;
-                this.p.activated = true;
-                this.x0 = this.x0 + dx;
-                this.y0 = this.y0 + dy;
-                this.draw()
-            }
-
-        };
-
-        this.up_fun = function()
-        {
-            this.p.pressed = false;
-        };
-
-        this.leave_fun = function()
-        {
-            this.p.pressed = false;
-        };
-
-        this.get_mouse_pos = function(evt)
-        {
-            var rect = this.canvas.getBoundingClientRect();
-            return {
-                x: evt.clientX - rect.left,
-                y: evt.clientY - rect.top
-            };
-        };
-
-        this.click_fun = function(e)
-        {
-            if (false == this.p.activated)
-            {
-                var pos = this.get_mouse_pos(e);
-                var t = {};
-                t.x_screen = pos.x;
-                t.y_screen = pos.y;
-                var pos_physical = this.screen_to_physical(pos);
-                t.x = pos_physical.x;
-                t.y = pos_physical.y;
-                var i;
-                for (i = 0; i < this.on_click_listener_list.length; i++)
-                {
-                    this.on_click_listener_list[i](t);
-                }
-            }
-        };
-
-      this.draw();
-    }
-
     var c = document.getElementById("myCanvas");
     var txt = document.getElementById("myDIV");
-
 
 
     var v_plane = new V_plane(c);
@@ -265,38 +31,16 @@
         txt.textContent = "(" + t.x + "; " + t.y + "); " + "(" + t.x_screen + "; " + t.y_screen + ")";
     });
 
-    function Line(start, end, colour)
-    {
-        this.p0 = start;
-        this.p1 = end;
-        this.colour = colour;
-
-        this.draw = function(v_plane)
-        {
-            var ctx = v_plane.get_context_2d();
-            var s0 = v_plane.physical_to_screen(this.p0);
-            var s1 = v_plane.physical_to_screen(this.p1);
-
-            ctx.beginPath();
-            ctx.lineWidth = 10;
-            ctx.lineCap = "butt";
-            ctx.strokeStyle = this.colour;
-            ctx.moveTo(s0.x, s0.y);
-            ctx.lineTo(s1.x, s1.y);
-            ctx.stroke();
-        };
-    }
-
-    var size = v_plane.get_screen_size();
-    var dy = size.height / 4 / v_plane.get_cur_scale();
+    var w = v_plane.get_physical_window();
+    var dy = (w.top - w.bottom) / 4;
+    var dx = (w.right - w.left) / 4;
 
     var l_data = [
-                {y: -dy, colour: "#FF0000"},
+                {y: dy, colour: "#FF0000"},
                 {y: 0, colour: "#00FF00"},
-                {y: dy, colour: "#0000FF"}
+                {y: -dy, colour: "#0000FF"}
             ];
     var i;
-    var dx = size.width / 4 / v_plane.get_cur_scale();
 
     for (i = 0; i < l_data.length; i++)
     {
@@ -311,12 +55,13 @@
     var button = document.getElementById("myBtn");
 
     var fun = function() {};
+    var line_text_element = document.getElementById("demo");
 
     button.addEventListener("click", function (){
         fun();
         var w = v_plane.get_physical_window();
-        document.getElementById("demo").innerHTML = w.left + ', ' + w.top + '; ' + w.right + ', ' + w.bottom;
-        var line = new Line({x: w.left, y: w.bottom}, {x: w.right, y: w.bottom}, "#A0A0A0");
+        line_text_element.innerHTML = w.left + ', ' + w.top + '; ' + w.right + ', ' + w.bottom;
+        var line = new Rectangle(w, "#A0A0A0");
         var id = v_plane.add_g_object(line);
         fun = function() {v_plane.remove_g_object(id)};
     });
