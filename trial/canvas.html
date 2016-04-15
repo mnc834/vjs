@@ -78,9 +78,14 @@
     var samples = new Array(n);
     for (i = 0; i < n; i++)
     {
-        samples[i] = {x: i, y : 50000 * Math.sin(2 * Math.PI * 0.000005 * i)}
+        samples[i] = {x: i, y : 50 * Math.sin(2 * Math.PI * 0.005 * i)}
     }
-    v_plane_2.add_g_object(new G_sample_list(samples, "#FF0000"))
+    v_plane_2.add_g_object(new G_sample_list(samples, "#FF0000", 'lines'));
+    v_plane_2.set_scale_processor(function (cur_scale, d_scale){
+        cur_scale.x *= (1 + d_scale);
+        return cur_scale
+
+    });
 
 </script>
 

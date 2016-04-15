@@ -62,10 +62,10 @@ function Rectangle(r, colour)
 }
 
 //list_of_samples
-function G_sample_list(v, colour)
+function G_sample_list(v, colour, style)
 {
     var line_width = 2;
-    var style = 'dots';
+    style = style || 'dots';
 
     var style_handles = [];
     style_handles['dots'] = {init: init_dot_draw, draw: draw_dot, finish: finish_dot_draw};

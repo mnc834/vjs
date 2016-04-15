@@ -5,8 +5,16 @@ function V_plane(canvas) {
     //getting canvas's parameters
     var ctx = canvas.getContext("2d");
 
-    //current scale
-    var cur_scale = 1;
+    //current scales (vertical and horizontal)
+    var cur_scale = {x: 1, y: 1};
+
+    //scale processor
+    var scale_processor = default_scale_processor;
+    function default_scale_processor(cur_scale, d_scale)
+    {
+        var ratio = 1 + d_scale;
+        return {x: cur_scale.x * ratio, y : cur_scale.y * ratio}
+    }
 
     //screen coordinates of the point with physical coordinates (0, 0)
     //screen coordinates origin from top left corner of the canvas
@@ -47,10 +55,11 @@ function V_plane(canvas) {
 
         //check for detail so Opera uses that instead of wheelDelta
         var delta = e.wheelDelta ? e.wheelDelta : -e.detail * 120;
-        var new_scale = cur_scale * (1 + delta / 1000);
+        var d_scale = delta / 1000;
+        var new_scale = scale_processor(cur_scale, d_scale);
         cur_scale = new_scale;
-        x0 = p_screen.x - p_physical.x * new_scale;
-        y0 = p_screen.y + p_physical.y * new_scale;
+        x0 = p_screen.x - p_physical.x * new_scale.x;
+        y0 = p_screen.y + p_physical.y * new_scale.y;
         instance.draw();
     }
 
@@ -129,6 +138,12 @@ function V_plane(canvas) {
         this.draw();
     };
 
+    //setting scale processor
+    this.set_scale_processor = function(fun)
+    {
+        scale_processor = fun
+    };
+
     this.get_context_2d = function()
     {
         return ctx;
@@ -158,8 +173,8 @@ function V_plane(canvas) {
 
     this.physical_to_screen = function(p)
     {
-        var screen_x = x0 + p.x * cur_scale;
-        var screen_y = y0 - p.y * cur_scale;
+        var screen_x = x0 + p.x * cur_scale.x;
+        var screen_y = y0 - p.y * cur_scale.y;
 
         return {
             x: screen_x,
@@ -169,8 +184,8 @@ function V_plane(canvas) {
 
     this.screen_to_physical = function(p)
     {
-        var physical_x = (p.x - x0) / cur_scale;
-        var physical_y = (y0 - p.y) / cur_scale;
+        var physical_x = (p.x - x0) / cur_scale.x;
+        var physical_y = (y0 - p.y) / cur_scale.y;
         return {
             x: physical_x,
             y: physical_y
