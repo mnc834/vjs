@@ -10,8 +10,9 @@
 <body>
 
 <p>The three different line caps:</p>
-<canvas id="myCanvas" width="300" height="150" style="border:1px solid #d3d3d3;">
+<canvas id="canvas_1" width="300" height="150" style="border:1px solid #d3d3d3;">
     Your browser does not support the HTML5 canvas tag.</canvas>
+
 
 <div id="myDIV">This example uses the addEventListener() <span></span>. </div>
 
@@ -19,19 +20,23 @@
 
 <p id="demo"></p>
 
+<canvas id="canvas_2" width="300" height="150" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.</canvas>
+
 <script>
 
-    var c = document.getElementById("myCanvas");
+    //v_plane_1
+    var canvas_1 = document.getElementById("canvas_1");
     var txt = document.getElementById("myDIV");
 
 
-    var v_plane = new V_plane(c);
-    v_plane.add_on_click_listener(function(t)
+    var v_plane_1 = new V_plane(canvas_1);
+    v_plane_1.add_on_click_listener(function(t)
     {
         txt.textContent = "(" + t.x + "; " + t.y + "); " + "(" + t.x_screen + "; " + t.y_screen + ")";
     });
 
-    var w = v_plane.get_physical_window();
+    var w = v_plane_1.get_physical_window();
     var dy = (w.top - w.bottom) / 4;
     var dx = (w.right - w.left) / 4;
 
@@ -49,7 +54,7 @@
         var x1 = dx;
         var y1 = l_data[i].y;
         var line = new Line({x: x0, y: y0}, {x: x1, y: y1}, l_data[i].colour);
-        v_plane.add_g_object(line);
+        v_plane_1.add_g_object(line);
     }
 
     var button = document.getElementById("myBtn");
@@ -59,12 +64,23 @@
 
     button.addEventListener("click", function (){
         fun();
-        var w = v_plane.get_physical_window();
+        var w = v_plane_1.get_physical_window();
         line_text_element.innerHTML = w.left + ', ' + w.top + '; ' + w.right + ', ' + w.bottom;
         var line = new Rectangle(w, "#A0A0A0");
-        var id = v_plane.add_g_object(line);
-        fun = function() {v_plane.remove_g_object(id)};
+        var id = v_plane_1.add_g_object(line);
+        fun = function() {v_plane_1.remove_g_object(id)};
     });
+
+    //v_plane_2
+    var canvas_2 = document.getElementById("canvas_2");
+    var v_plane_2 = new V_plane(canvas_2);
+    var n = 2000000;
+    var samples = new Array(n);
+    for (i = 0; i < n; i++)
+    {
+        samples[i] = {x: i, y : 50000 * Math.sin(2 * Math.PI * 0.000005 * i)}
+    }
+    v_plane_2.add_g_object(new G_sample_list(samples, "#FF0000"))
 
 </script>
 

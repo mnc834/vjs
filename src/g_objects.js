@@ -61,8 +61,170 @@ function Rectangle(r, colour)
     }
 }
 
+//list_of_samples
+function G_sample_list(v, colour)
+{
+    var line_width = 2;
+    var style = 'dots';
+
+    var style_handles = [];
+    style_handles['dots'] = {init: init_dot_draw, draw: draw_dot, finish: finish_dot_draw};
+    style_handles['lines'] = {init: init_line_draw, draw: draw_line, finish: finish_line_draw};
+
+    var start_index;
+    var end_index;
+    var win_left;
+    var win_right;
+
+    function init_dot_draw(ctx, p)
+    {
+        ctx.moveTo(p.x, p.y);
+        ctx.fillStyle = colour;
+    }
+
+    function draw_dot(ctx, p)
+    {
+        ctx.fillRect(p.x, p.y, line_width, line_width);
+    }
+
+    function finish_dot_draw(ctx)
+    {
+
+    }
+
+    function init_line_draw(ctx, p)
+    {
+        ctx.beginPath();
+        ctx.lineWidth = line_width;
+        ctx.strokeStyle = colour;
+        ctx.moveTo(p.x, p.y);
+    }
+
+    function draw_line(ctx, p)
+    {
+        ctx.lineTo(p.x, p.y)
+    }
+
+    function finish_line_draw(ctx)
+    {
+        ctx.stroke();
+    }
+
+    function smooth(v)
+    {
+        var i = 0;
+        var result = [];
+        if (i < v.length)
+        {
+            var x = Math.round(v[i].x);
+            var s = v[i].y;
+            var n = 1;
+            for(++i; i < v.length; i++)
+            {
+                var cur_x = Math.round(v[i].x);
+                if (cur_x == x)
+                {
+                    s += v[i].y;
+                    n++;
+                }
+                else
+                {
+                    result.push({x: x, y: s / n});
+                    x = cur_x;
+                    s = v[i].y;
+                    n = 1;
+                }
+            }
+            result.push({x: x, y: s / n});
+        }
+        return result;
+    }
+
+    function filter(v_plane)
+    {
+        var w = v_plane.get_physical_window();
+        if (win_left == undefined)
+        {
+            start_index = 0;
+            while ((start_index < v.length - 1) && (v[start_index].x < w.left))
+            {
+                start_index++
+            }
+
+            end_index = v.length - 1;
+            while ((end_index > 0) && (v[end_index].x > w.right))
+            {
+                end_index--
+            }
+
+        }
+        else
+        {
+            if (win_left < w.left)
+            {
+                while ((start_index < v.length - 1) && (v[start_index].x < w.left))
+                {
+                    start_index++
+                }
+            }
+            else
+            {
+                while ((start_index > 0) && (v[start_index].x > w.left))
+                {
+                    start_index--
+                }
+            }
+
+            if (win_right > w.right)
+            {
+                while ((end_index > 0) && (v[end_index].x > w.right))
+                {
+                    end_index--
+                }
+            }
+            else
+            {
+                while ((end_index < v.length - 1) && (v[end_index].x < w.right))
+                {
+                    end_index++
+                }
+            }
+        }
+        win_left = w.left;
+        win_right = w.right;
+        return v.slice(start_index, end_index + 1);
+    }
+
+    this.draw = function(v_plane)
+    {
+        var ctx = v_plane.get_context_2d();
+
+        var win_v = filter(v_plane);
+        var i;
+        var p = new Array(win_v.length);
+        for (i = 0; i < win_v.length; i++)
+        {
+            p[i] = v_plane.physical_to_screen(win_v[i]);
+        }
+
+        var screen_p = smooth(p);
+
+        if (screen_p.length > 0)
+        {
+            var draw_handle = style_handles[style];
+
+            draw_handle.init(ctx, screen_p);
+            for (i = 0; i < screen_p.length; i++) {
+                draw_handle.draw(ctx, screen_p[i]);
+            }
+            draw_handle.finish(ctx)
+        }
+    }
+
+}
+
 //polynomial
-function Polynomial_g_object(coefficients, colour)
+function G_polynomial(coefficients, colour)
 {
     var pixel_step = 1;
 
