@@ -224,7 +224,7 @@ function G_sample_list(v, colour, style)
 }
 
 //polynomial
-function G_polynomial(coefficients, colour)
+function G_polynomial(coefficients, colour, limits)
 {
     var pixel_step = 1;
 
@@ -240,12 +240,31 @@ function G_polynomial(coefficients, colour)
 
     this.draw = function(v_plane)
     {
-        var ctx = v_plane.get_context_2d();
         var win = v_plane.get_physical_window();
-        var size = v_plane.get_screen_size();
+        var from = win.left;
+        var to = win.right;
 
-        var n = size.width / pixel_step + 1;
-        var dx = (win.right - win.left) / (n - 1);
+        if (limits)
+        {
+            if (limits.left > from)
+            {
+                from = limits.left;
+            }
+            if (limits.right < to)
+            {
+                to = limits.right;
+            }
+        }
+
+        var ctx = v_plane.get_context_2d();
+        var screen_from = get_screen_point(from);
+        var screen_to = get_screen_point(to);
+        var screen_span = screen_to.x - screen_from.x;
+
+
+
+        var n = screen_span / pixel_step + 1;
+        var dx = (to - from) / (n - 1);
 
         function get_screen_point(x)
         {
@@ -253,15 +272,14 @@ function G_polynomial(coefficients, colour)
             return v_plane.physical_to_screen({x: x, y: y});
         }
 
-        var s = get_screen_point(win.left);
         ctx.beginPath();
         ctx.lineWidth = 2;
         ctx.lineCap = "butt";
         ctx.strokeStyle = colour;
-        ctx.moveTo(s.x, s.y);
+        ctx.moveTo(screen_from.x, screen_from.y);
         for (var i = 1; i < n; i++)
         {
-            s = get_screen_point(win.left + dx * i);
+            var s = get_screen_point(from + dx * i);
             ctx.lineTo(s.x, s.y);
         }
         ctx.stroke();

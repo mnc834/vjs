@@ -192,6 +192,16 @@ function V_plane(canvas) {
         };
     };
 
+    //makes a point with physical coordinates p.x p.y to be in the
+    //center of the screen
+    this.move_screen_center = function(p)
+    {
+        //updating x0 and y0 (reverse to physical_to_screen)
+        x0 = canvas.width / 2 - p.x * cur_scale.x;
+        y0 = canvas.height / 2 + p.y * cur_scale.y;
+        this.draw();
+    };
+
     this.draw = function()
     {
 
