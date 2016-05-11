@@ -106,6 +106,7 @@ function V_plane(canvas) {
             var pos_physical = instance.screen_to_physical(pos);
             t.x = pos_physical.x;
             t.y = pos_physical.y;
+            t.ctrlKey = e.ctrlKey;
             var i;
             for (i = 0; i < on_click_listener_list.length; i++)
             {

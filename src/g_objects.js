@@ -61,6 +61,25 @@ function Rectangle(r, colour)
     }
 }
 
+//selection circle
+function G_selection_circle(p, screen_radius, colour)
+{
+    var line_width = 1;
+
+    this.draw = function(v_plane)
+    {
+        var ctx = v_plane.get_context_2d();
+
+        var center = v_plane.physical_to_screen(p);
+
+        ctx.beginPath();
+        ctx.lineWidth = line_width;
+        ctx.strokeStyle = colour;
+        ctx.arc(center.x, center.y, screen_radius, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+}
+
 //list_of_samples
 function G_sample_list(v, colour, style)
 {
@@ -219,6 +238,25 @@ function G_sample_list(v, colour, style)
             }
             draw_handle.finish(ctx)
         }
+    };
+
+    this.check_selection = function(p, max_delta)
+    {
+        var i;
+        var result = false;
+
+        for (i = start_index; i <= end_index; i++)
+        {
+            var dx = Math.abs(v[i].x - p.x);
+            var dy = Math.abs(v[i].y - p.y);
+            if ((max_delta > dx) && (max_delta > dy))
+            {
+                max_delta = dx > dy ? dx : dy;
+                result = v[i];
+            }
+        }
+
+        return result;
     }
 
 }

@@ -80,11 +80,31 @@
     {
         samples[i] = {x: i, y : 50 * Math.sin(2 * Math.PI * 0.005 * i)}
     }
-    v_plane_2.add_g_object(new G_sample_list(samples, "#FF0000", 'lines'));
+    var g_sin = new G_sample_list(samples, "#FF0000", 'lines');
+    v_plane_2.add_g_object(g_sin);
     v_plane_2.set_scale_processor(function (cur_scale, d_scale){
         cur_scale.x *= (1 + d_scale);
         return cur_scale
+    });
 
+    var clear_ctrl_click_2 = function(){};
+    v_plane_2.add_on_click_listener(function(t)
+    {
+        var max_delta = 5;
+        if(t.ctrlKey)
+        {
+            clear_ctrl_click_2();
+            clear_ctrl_click_2 = function(){};
+            var res = g_sin.check_selection(t, max_delta);
+            if ('object' == typeof res)
+            {
+                var r_id = v_plane_2.add_g_object(new G_selection_circle(res, max_delta, "#A0A0A0"));
+                clear_ctrl_click_2 = function()
+                {
+                    v_plane_2.remove_g_object(r_id)
+                }
+            }
+        }
     });
 
 </script>
