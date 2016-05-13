@@ -6,6 +6,11 @@ function Line(start, end, colour)
 {
     var line_width = 10;
 
+    this.set_line_width = function(new_line_width)
+    {
+        line_width = new_line_width
+    };
+
     this.draw = function(v_plane)
     {
         var ctx = v_plane.get_context_2d();
