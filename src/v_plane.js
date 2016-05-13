@@ -30,6 +30,9 @@ function V_plane(canvas) {
     //list of on click listeners functions
     var on_click_listener_list = [];
 
+    // id of click counters
+    var click_listener_counter = 0;
+
     //list of graphical objects (callback functions)
     var g_object_list = [];
 
@@ -110,7 +113,7 @@ function V_plane(canvas) {
             var i;
             for (i = 0; i < on_click_listener_list.length; i++)
             {
-                on_click_listener_list[i](t);
+                on_click_listener_list[i].listener(t);
             }
         }
     }
@@ -118,7 +121,18 @@ function V_plane(canvas) {
     //privileged methods
     this.add_on_click_listener = function(on_click_listener)
     {
-        on_click_listener_list.push(on_click_listener);
+        var id = click_listener_counter++;
+        on_click_listener_list.push({id: id, listener: on_click_listener});
+        return id;
+    };
+
+    this.remove_on_click_listener = function(id)
+    {
+        var filter_fun = function(on_click_listener_rec)
+        {
+            return id != on_click_listener_rec.id;
+        };
+        on_click_listener_list = on_click_listener_list.filter(filter_fun);
     };
 
     this.add_g_object = function(g_object)
