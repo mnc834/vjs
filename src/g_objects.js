@@ -85,6 +85,71 @@ function G_selection_circle(p, screen_radius, colour)
     }
 }
 
+// sample selector based on V_palne's screen limits
+function G_sample_selector(v, converter)
+{
+    var start_index;
+    var end_index;
+    var win_left;
+    var win_right;
+
+    this.select_samples = function(v_plane)
+    {
+        var w = v_plane.get_physical_window();
+        if (win_left == undefined)
+        {
+            start_index = 0;
+            while ((start_index < v.length - 1) && (converter(v[start_index]) < w.left))
+            {
+                start_index++
+            }
+
+            end_index = v.length - 1;
+            while ((end_index > 0) && (converter(v[end_index]) > w.right))
+            {
+                end_index--
+            }
+
+        }
+        else
+        {
+            if (win_left < w.left)
+            {
+                while ((start_index < v.length - 1) && (converter(v[start_index]) < w.left))
+                {
+                    start_index++
+                }
+            }
+            else
+            {
+                while ((start_index > 0) && (converter(v[start_index]) > w.left))
+                {
+                    start_index--
+                }
+            }
+
+            if (win_right > w.right)
+            {
+                while ((end_index > 0) && (converter(v[end_index]) > w.right))
+                {
+                    end_index--
+                }
+            }
+            else
+            {
+                while ((end_index < v.length - 1) && (converter(v[end_index]) < w.right))
+                {
+                    end_index++
+                }
+            }
+        }
+        win_left = w.left;
+        win_right = w.right;
+        return v.slice(start_index, end_index + 1);
+    }
+}
+
+
 //list_of_samples
 function G_sample_list(v, colour, style)
 {
@@ -95,10 +160,7 @@ function G_sample_list(v, colour, style)
     style_handles['dots'] = {init: init_dot_draw, draw: draw_dot, finish: finish_dot_draw};
     style_handles['lines'] = {init: init_line_draw, draw: draw_line, finish: finish_line_draw};
 
-    var start_index;
-    var end_index;
-    var win_left;
-    var win_right;
+    var selector = new G_sample_selector(v, function(p) { return p.x; });
 
     function init_dot_draw(ctx, p)
     {
@@ -164,66 +226,11 @@ function G_sample_list(v, colour, style)
         return result;
     }
 
-    function filter(v_plane)
-    {
-        var w = v_plane.get_physical_window();
-        if (win_left == undefined)
-        {
-            start_index = 0;
-            while ((start_index < v.length - 1) && (v[start_index].x < w.left))
-            {
-                start_index++
-            }
-
-            end_index = v.length - 1;
-            while ((end_index > 0) && (v[end_index].x > w.right))
-            {
-                end_index--
-            }
-
-        }
-        else
-        {
-            if (win_left < w.left)
-            {
-                while ((start_index < v.length - 1) && (v[start_index].x < w.left))
-                {
-                    start_index++
-                }
-            }
-            else
-            {
-                while ((start_index > 0) && (v[start_index].x > w.left))
-                {
-                    start_index--
-                }
-            }
-
-            if (win_right > w.right)
-            {
-                while ((end_index > 0) && (v[end_index].x > w.right))
-                {
-                    end_index--
-                }
-            }
-            else
-            {
-                while ((end_index < v.length - 1) && (v[end_index].x < w.right))
-                {
-                    end_index++
-                }
-            }
-        }
-        win_left = w.left;
-        win_right = w.right;
-        return v.slice(start_index, end_index + 1);
-    }
-
     this.draw = function(v_plane)
     {
         var ctx = v_plane.get_context_2d();
 
-        var win_v = filter(v_plane);
+        var win_v = selector.select_samples(v_plane);
         var i;
         var p = new Array(win_v.length);
         for (i = 0; i < win_v.length; i++)
@@ -327,6 +334,80 @@ function G_polynomial(coefficients, colour, limits)
         }
         ctx.stroke();
     };
+}
+
+var G_candles_appearance_scheme =
+{
+    gain_colour: '#00FF00',
+    loss_colour: '#FF0000',
+    width_ratio: 0.8,
+    min_width: 2
+};
+
+// list of candles
+function G_candles(v, colour_scheme)
+{
+    appearance_scheme = colour_scheme || G_candles_appearance_scheme;
+    var selector = new G_sample_selector(v, function(p) { return p.time; });
+
+    this.draw = function(v_plane)
+    {
+        var selected = selector.select_samples(v_plane);
+        var candles = new Array(selected.length);
+        var window = v_plane.get_screen_size();
+
+        var width = appearance_scheme.width_ratio * window.width;
+        var prevTime = undefined;
+        for (var i = 0; i < selected.length; i++)
+        {
+            data = selected[i];
+            let open = v_plane.physical_to_screen({x: data.time, y: data.open});
+            let high = v_plane.physical_to_screen({x: data.time, y: data.high});
+            let low = v_plane.physical_to_screen({x: data.time, y: data.low});
+            let close = v_plane.physical_to_screen({x: data.time, y: data.close});
+            if (undefined != prevTime)
+            {
+                let diff = appearance_scheme.width_ratio * (open.x - prevTime);
+                if (diff < appearance_scheme.min_width)
+                {
+                    diff = appearance_scheme.min_width;
+                }
+                if (diff < width)
+                {
+                    width = diff;
+                }
+            }
+            prevTime = open.x;
+            let colour = appearance_scheme.gain_colour;
+            if (data.close < data.open)
+            {
+                colour = appearance_scheme.loss_colour;
+            }
+            candles[i] = {x: open.x, open: open.y, high: high.y, low: low.y, close: close.y, colour: colour};
+        }
+
+        for (var i = 0; i < candles.length; i++)
+        {
+            candle = candles[i];
+
+
+            var ctx = v_plane.get_context_2d();
+
+            ctx.beginPath();
+            ctx.lineWidth = appearance_scheme.min_width;
+            ctx.lineCap = "butt";
+            ctx.strokeStyle = candle.colour;
+            ctx.moveTo(candle.x, candle.high);
+            ctx.lineTo(candle.x, candle.low);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.lineWidth = width;
+            ctx.moveTo(candle.x, candle.open);
+            ctx.lineTo(candle.x, candle.close);
+            ctx.stroke();
+
+        }
+    }
 }
 
 

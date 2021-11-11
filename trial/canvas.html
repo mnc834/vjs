@@ -23,6 +23,10 @@
 <canvas id="canvas_2" width="300" height="150" style="border:1px solid #d3d3d3;">
     Your browser does not support the HTML5 canvas tag.</canvas>
 
+<p>Candles</p>
+<canvas id="canvas_3" width="300" height="150" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.</canvas>
+
 <script>
 
     //v_plane_1
@@ -106,6 +110,17 @@
             }
         }
     });
+
+    //v_plane_3
+    var canvas_3 = document.getElementById("canvas_3");
+    var v_plane_3 = new V_plane(canvas_3);
+    v_plane_3.add_g_object(new G_candles([
+                                            {time: 10, open: 108.95, low: 108.52, high: 109.49,   close: 108.8},
+                                            {time: 20, open: 109,    low: 108.62, high: 109.82,   close: 108.83},
+                                            {time: 30, open: 108.32, low: 107.72, high: 109.0399, close: 108.75},
+                                            {time: 40, open: 109.05, low: 108.73, high: 109.83,   close: 109.93},
+                                            {time: 50, open: 109.03, low: 108.85, high: 109.79,   close: 109.09},
+                                         ]));
 
 </script>
 

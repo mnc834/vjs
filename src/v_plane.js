@@ -193,7 +193,7 @@ function V_plane(canvas) {
 
         return {
             x: screen_x,
-            y:screen_y
+            y: screen_y
         };
     };
 
